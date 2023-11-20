@@ -1,10 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm'
-
-export enum Role {
-  USER = 'USER',
-  ADMIN = 'ADMIN',
-  BANNED = 'BANNED'
-}
+import { Role } from 'enums/users.enum'
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Unique, Index } from 'typeorm'
 
 @Entity()
 export class User {
@@ -22,6 +17,9 @@ export class User {
   role: Role
 
   @Column()
+  @Index({
+    unique: true
+  })
   email: string
 
   @Column()
@@ -36,6 +34,11 @@ export class User {
     nullable: true
   })
   birthday: Date
+
+  @Column({
+    nullable: true
+  })
+  refreshToken: string
 
   @CreateDateColumn()
   createdAt: Date
