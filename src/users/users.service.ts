@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { User } from 'database/entities/user.entity'
 import { Repository } from 'typeorm'
@@ -7,7 +7,8 @@ import { ResponseData } from 'common/customs/responseData'
 import * as bcrypt from 'bcrypt'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
-import { Role } from 'enums/users.enum'
+import { Role } from 'common/enums/users.enum'
+import { LoginUserDto } from './dto/loginUser.dto'
 
 @Injectable()
 export class UsersService {
@@ -47,6 +48,58 @@ export class UsersService {
           access_token,
           refresh_token
         }
+      })
+    } catch (error) {
+      throw error
+    }
+  }
+
+  async login(loginUserDto: LoginUserDto) {
+    try {
+      // Find user by email and passwordHashed
+      const user = await this.getUserByEmail(loginUserDto.email)
+      const isMatchPassword = await bcrypt.compare(loginUserDto.password, user.password)
+      if (!user || !isMatchPassword) {
+        throw new NotFoundException('User not found')
+      }
+      // Create token
+      const { access_token, refresh_token } = await this.createToken({ userId: user.id, role: user.role })
+      // Update user
+      await this.usersService.update(user.id, {
+        refreshToken: refresh_token
+      })
+
+      return new ResponseData({
+        message: 'Login successfully',
+        data: {
+          access_token,
+          refresh_token
+        }
+      })
+    } catch (error) {
+      throw error
+    }
+  }
+
+  async logout(refresh_token: string) {
+    try {
+      // Check if refresh token exists
+      if (!refresh_token) {
+        throw new NotFoundException('Refresh token not found')
+      }
+      // Find user
+      const user = await this.usersService.findOneBy({
+        refreshToken: refresh_token
+      })
+      if (!user) {
+        throw new NotFoundException('Refresh token not found')
+      }
+      // Update user
+      await this.usersService.update(user.id, {
+        refreshToken: null
+      })
+      return new ResponseData({
+        message: 'Logout successfully'
       })
     } catch (error) {
       throw error
