@@ -32,7 +32,6 @@ export class UsersController {
   }
 
   @Post('refresh-token')
-  @UseGuards(AuthGuard)
   refreshToken(@Body() { refresh_token }: { refresh_token: string }) {
     return this.usersService.refreshToken(refresh_token)
   }
