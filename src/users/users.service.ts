@@ -58,8 +58,11 @@ export class UsersService {
     try {
       // Find user by email and passwordHashed
       const user = await this.getUserByEmail(loginUserDto.email)
+      if (!user) {
+        throw new NotFoundException('User not found')
+      }
       const isMatchPassword = await bcrypt.compare(loginUserDto.password, user.password)
-      if (!user || !isMatchPassword) {
+      if (!isMatchPassword) {
         throw new NotFoundException('User not found')
       }
       // Create token
