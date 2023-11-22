@@ -137,6 +137,33 @@ export class UsersService {
     }
   }
 
+  async getProfile(userId: string) {
+    const user = await this.usersService.findOne({
+      where: {
+        id: userId
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        avatar: true,
+        address: true,
+        birthday: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    })
+    if (!user) {
+      throw new NotFoundException('User not found')
+    }
+    return new ResponseData({
+      message: 'Get profile successfully',
+      data: {
+        user
+      }
+    })
+  }
+
   async getUserByEmail(email: string) {
     const user = await this.usersService.findOneBy({
       email

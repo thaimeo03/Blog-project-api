@@ -28,6 +28,11 @@ export class User {
   @Column({
     nullable: true
   })
+  avatar: string
+
+  @Column({
+    nullable: true
+  })
   address: string
 
   @Column({
