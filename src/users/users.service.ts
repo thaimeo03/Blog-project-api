@@ -164,6 +164,14 @@ export class UsersService {
     })
   }
 
+  async getUserById(userId: string) {
+    const user = await this.usersService.findOneBy({
+      id: userId
+    })
+
+    return user
+  }
+
   async getUserByEmail(email: string) {
     const user = await this.usersService.findOneBy({
       email
