@@ -6,9 +6,10 @@ import { ConfigModule } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { dataSourceOptions } from 'database/data-source'
 import { PostsModule } from './posts/posts.module'
+import { MediasModule } from './medias/medias.module'
 
 @Module({
-  imports: [ConfigModule.forRoot(), TypeOrmModule.forRoot(dataSourceOptions), UsersModule, PostsModule],
+  imports: [ConfigModule.forRoot(), TypeOrmModule.forRoot(dataSourceOptions), UsersModule, PostsModule, MediasModule],
   controllers: [AppController],
   providers: [AppService]
 })
