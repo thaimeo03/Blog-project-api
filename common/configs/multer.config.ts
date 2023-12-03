@@ -11,7 +11,6 @@ export class MulterConfigService implements MulterOptionsFactory {
     return {
       fileFilter(req, file, callback) {
         const ext = extname(file.originalname)
-        console.log(ext)
 
         const allowedExtensions = ['.png', '.jpg', '.jpeg']
 
