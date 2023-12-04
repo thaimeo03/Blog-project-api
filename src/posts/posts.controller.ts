@@ -27,7 +27,7 @@ export class PostsController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.postsService.findOne(+id)
+    return this.postsService.findOne(id)
   }
 
   @Patch(':id')
@@ -36,7 +36,9 @@ export class PostsController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.postsService.remove(+id)
+  @UseGuards(AuthGuard)
+  @Roles(Role.ADMIN, Role.USER)
+  delete(@Param('id') id: string) {
+    return this.postsService.delete(id)
   }
 }

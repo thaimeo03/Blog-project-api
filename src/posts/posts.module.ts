@@ -5,12 +5,13 @@ import { JwtModule } from '@nestjs/jwt'
 import { ConfigModule } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { Post } from 'database/entities/post.entity'
-import { User } from 'database/entities/user.entity'
-import { UsersService } from 'src/users/users.service'
+import { UsersModule } from 'src/users/users.module'
+import { ImagesModule } from 'src/images/images.module'
+import { MediasService } from 'src/medias/medias.service'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Post, User]), JwtModule, ConfigModule],
+  imports: [TypeOrmModule.forFeature([Post]), UsersModule, ImagesModule, JwtModule, ConfigModule],
   controllers: [PostsController],
-  providers: [PostsService, UsersService]
+  providers: [PostsService, MediasService]
 })
 export class PostsModule {}
