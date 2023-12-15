@@ -53,6 +53,7 @@ export class PostsService {
       message: 'Get posts successfully',
       data: posts,
       pagination: {
+        limit: limitQuery,
         current_page: pageQuery,
         total_page: total
       }
