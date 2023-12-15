@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common'
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query } from '@nestjs/common'
 import { PostsService } from './posts.service'
 import { CreatePostDto } from './dto/create-post.dto'
 import { UpdatePostDto } from './dto/update-post.dto'
@@ -6,6 +6,7 @@ import { AuthGuard } from 'src/users/users.guard'
 import { Roles } from 'common/decorators/roles.decorator'
 import { Role } from 'common/enums/users.enum'
 import { Request } from 'express'
+import { FilterPostDto } from './dto/filter-post.dto'
 
 @Controller('posts')
 export class PostsController {
@@ -21,8 +22,10 @@ export class PostsController {
   }
 
   @Get()
-  findAll() {
-    return this.postsService.findAll()
+  @UseGuards(AuthGuard)
+  @Roles(Role.ADMIN, Role.USER)
+  findAll(@Query() filterPostDto: FilterPostDto) {
+    return this.postsService.findAll(filterPostDto)
   }
 
   @Get(':id')

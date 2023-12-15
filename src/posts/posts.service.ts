@@ -5,10 +5,11 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Post } from 'database/entities/post.entity'
 import { Repository } from 'typeorm'
 import { UsersService } from 'src/users/users.service'
-import { ResponseData } from 'common/customs/responseData'
+import { ResponseData, ResponseDataWithPagination } from 'common/customs/responseData'
 import { omit } from 'lodash'
 import { MediasService } from 'src/medias/medias.service'
 import { ImagesService } from 'src/images/images.service'
+import { FilterPostDto } from './dto/filter-post.dto'
 
 @Injectable()
 export class PostsService {
@@ -32,8 +33,30 @@ export class PostsService {
     }
   }
 
-  findAll() {
-    return `This action returns all posts`
+  async findAll(filterPostDto: FilterPostDto) {
+    const { limit, page } = filterPostDto
+    const LIMIT_QUERY = 10
+    const PAGE_QUERY = 1
+
+    const limitQuery = limit ? limit : LIMIT_QUERY
+    const pageQuery = page ? page : PAGE_QUERY
+
+    const posts = await this.postsService.find({
+      take: limitQuery,
+      skip: (pageQuery - 1) * limitQuery
+    })
+
+    // Total page
+    const total = Math.ceil((await this.postsService.count()) / limitQuery)
+
+    return new ResponseDataWithPagination({
+      message: 'Get posts successfully',
+      data: posts,
+      pagination: {
+        current_page: pageQuery,
+        total_page: total
+      }
+    })
   }
 
   async findOne(id: string) {
