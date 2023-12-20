@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer'
-import { IsNumber, IsOptional } from 'class-validator'
+import { IsEnum, IsNumber, IsOptional } from 'class-validator'
 
 export class FilterPostDto {
   @IsOptional()
@@ -11,4 +11,15 @@ export class FilterPostDto {
   @IsNumber()
   @Transform(({ value }) => parseInt(value))
   page?: number
+
+  @IsOptional()
+  title?: string
+
+  @IsOptional()
+  @IsEnum(['asc', 'desc'], { message: 'createdAt must be asc or desc' })
+  createdAt?: string
+
+  @IsOptional()
+  @IsEnum(['asc', 'desc'], { message: 'views must be asc or desc' })
+  view?: string // Don't have views
 }

@@ -3,7 +3,7 @@ import { CreatePostDto } from './dto/create-post.dto'
 import { UpdatePostDto } from './dto/update-post.dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Post } from 'database/entities/post.entity'
-import { Repository } from 'typeorm'
+import { FindOptionsWhere, LessThanOrEqual, Like, MoreThanOrEqual, Repository } from 'typeorm'
 import { UsersService } from 'src/users/users.service'
 import { ResponseData, ResponseDataWithPagination } from 'common/customs/responseData'
 import { omit } from 'lodash'
@@ -34,20 +34,36 @@ export class PostsService {
   }
 
   async findAll(filterPostDto: FilterPostDto) {
-    const { limit, page } = filterPostDto
+    const { limit, page, title, createdAt, view } = filterPostDto
     const LIMIT_QUERY = 10
     const PAGE_QUERY = 1
 
     const limitQuery = limit ? limit : LIMIT_QUERY
     const pageQuery = page ? page : PAGE_QUERY
 
-    const posts = await this.postsService.find({
-      take: limitQuery,
-      skip: (pageQuery - 1) * limitQuery
-    })
+    // Define where query
+    const whereQuery: FindOptionsWhere<Post> | FindOptionsWhere<Post>[] = {
+      title: title ? Like(`%${title}%`) : undefined
+    }
+
+    // Get posts by filters
+    const [posts, totalPosts] = await Promise.all([
+      this.postsService.find({
+        where: whereQuery,
+        order: {
+          createdAt: createdAt ? (createdAt === 'asc' ? 'ASC' : 'DESC') : 'DESC'
+          // view: view ? (view === 'asc' ? 'ASC' : 'DESC') : undefined
+        },
+        take: limitQuery,
+        skip: (pageQuery - 1) * limitQuery
+      }),
+      this.postsService.count({
+        where: whereQuery
+      })
+    ])
 
     // Total page
-    const total = Math.ceil((await this.postsService.count()) / limitQuery)
+    const total = Math.ceil(totalPosts / limitQuery)
 
     return new ResponseDataWithPagination({
       message: 'Get posts successfully',
@@ -61,10 +77,18 @@ export class PostsService {
   }
 
   async findOne(id: string) {
-    return await this.postsService.findOne({
+    const post = await this.postsService.findOne({
       where: {
         id
       }
+    })
+
+    if (!post) {
+      throw new NotFoundException('Post not found')
+    }
+    return new ResponseData({
+      message: 'Get post successfully',
+      data: post
     })
   }
 
@@ -75,7 +99,11 @@ export class PostsService {
   async delete(id: string) {
     try {
       // Find existing post
-      const post = await this.findOne(id)
+      const post = await this.postsService.findOne({
+        where: {
+          id
+        }
+      })
       if (!post) {
         throw new NotFoundException('Post not found')
       }
