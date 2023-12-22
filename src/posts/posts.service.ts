@@ -77,18 +77,20 @@ export class PostsService {
   }
 
   async findOne(id: string) {
-    const post = await this.postsService.findOne({
-      where: {
-        id
-      }
-    })
+    // Find one post and author
+    const postWithAuthor = await this.postsService
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.user', 'user')
+      .select(['post', 'user.id', 'user.name', 'user.avatar'])
+      .where('post.id = :id', { id })
+      .getOne()
 
-    if (!post) {
+    if (!postWithAuthor) {
       throw new NotFoundException('Post not found')
     }
     return new ResponseData({
       message: 'Get post successfully',
-      data: post
+      data: postWithAuthor
     })
   }
 
