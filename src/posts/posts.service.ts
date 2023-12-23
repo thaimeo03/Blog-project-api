@@ -54,6 +54,14 @@ export class PostsService {
           createdAt: createdAt ? (createdAt === 'asc' ? 'ASC' : 'DESC') : 'DESC'
           // view: view ? (view === 'asc' ? 'ASC' : 'DESC') : undefined
         },
+        relations: ['user'],
+        select: {
+          user: {
+            id: true,
+            name: true,
+            avatar: true
+          }
+        },
         take: limitQuery,
         skip: (pageQuery - 1) * limitQuery
       }),
