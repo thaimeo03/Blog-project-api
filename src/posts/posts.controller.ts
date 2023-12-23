@@ -29,13 +29,19 @@ export class PostsController {
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard)
+  @Roles(Role.ADMIN, Role.USER)
   findOne(@Param('id') id: string) {
     return this.postsService.findOne(id)
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
-    return this.postsService.update(+id, updatePostDto)
+  @UseGuards(AuthGuard)
+  @Roles(Role.ADMIN, Role.USER)
+  update(@Req() req: Request, @Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
+    const userId = req['user'].userId
+
+    return this.postsService.update({ id, userId, updatePostDto })
   }
 
   @Delete(':id')

@@ -94,8 +94,36 @@ export class PostsService {
     })
   }
 
-  update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`
+  async update({ id, userId, updatePostDto }: { id: string; userId: string; updatePostDto: UpdatePostDto }) {
+    try {
+      const post = await this.postsService
+        .createQueryBuilder('post')
+        .leftJoinAndSelect('post.user', 'user')
+        .select(['post', 'user.id'])
+        .where('post.id = :id and user.id = :userId', { id, userId })
+        .getOne()
+
+      if (!post) {
+        throw new NotFoundException('Post not found') // Handle missing post
+      }
+
+      const dto = new UpdatePostDto({
+        title: updatePostDto.title,
+        thumbnail: updatePostDto.thumbnail,
+        content: updatePostDto.content
+      })
+
+      await this.postsService.update(id, {
+        ...dto,
+        updatedAt: new Date() // Update time of last update
+      })
+
+      return new ResponseData({
+        message: 'Update post successfully'
+      })
+    } catch (error) {
+      throw error
+    }
   }
 
   async delete(id: string) {

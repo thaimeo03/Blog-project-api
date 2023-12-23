@@ -1,4 +1,16 @@
-import { Body, Controller, Post, UsePipes, HttpCode, HttpStatus, UseGuards, Get, Param, Req } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Post,
+  UsePipes,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+  Get,
+  Param,
+  Req,
+  Patch
+} from '@nestjs/common'
 import { LoginUserDto } from './dto/loginUser.dto'
 import { RegisterUserDto } from './dto/registerUser.dto'
 import { RegisterPipe } from 'common/pipes/users.pipe'
@@ -7,6 +19,7 @@ import { Roles } from 'common/decorators/roles.decorator'
 import { Role } from 'common/enums/users.enum'
 import { AuthGuard } from './users.guard'
 import { Request } from 'express'
+import { UpdateProfileDto } from './dto/updateProfile.dto'
 
 @Controller('users')
 export class UsersController {
@@ -41,5 +54,14 @@ export class UsersController {
   @Roles(Role.ADMIN, Role.USER)
   getProfile(@Req() req: Request) {
     return this.usersService.getProfile(req['user'].userId)
+  }
+
+  @Patch()
+  @UseGuards(AuthGuard)
+  @Roles(Role.ADMIN, Role.USER)
+  update(@Req() req: Request, @Body() updateProfileDto: UpdateProfileDto) {
+    const id = req['user'].userId
+
+    return this.usersService.updateProfile({ id, updateProfileDto })
   }
 }

@@ -9,6 +9,7 @@ import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import { Role } from 'common/enums/users.enum'
 import { LoginUserDto } from './dto/loginUser.dto'
+import { UpdateProfileDto } from './dto/updateProfile.dto'
 
 @Injectable()
 export class UsersService {
@@ -162,6 +163,45 @@ export class UsersService {
         user
       }
     })
+  }
+
+  async updateProfile({ id, updateProfileDto }: { id: string; updateProfileDto: UpdateProfileDto }) {
+    try {
+      const user = await this.usersService.findOne({
+        where: { id },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatar: true,
+          address: true,
+          birthday: true,
+          createdAt: true,
+          updatedAt: true
+        }
+      })
+
+      if (!user) {
+        throw new NotFoundException('User not found') // Handle missing user
+      }
+
+      const dto = new UpdateProfileDto({
+        address: updateProfileDto.address,
+        birthday: updateProfileDto.birthday,
+        name: updateProfileDto.name
+      })
+
+      await this.usersService.update(id, {
+        ...dto,
+        updatedAt: new Date()
+      })
+
+      return new ResponseData({
+        message: 'Update profile successfully'
+      })
+    } catch (error) {
+      throw error
+    }
   }
 
   async getUserById(userId: string) {
