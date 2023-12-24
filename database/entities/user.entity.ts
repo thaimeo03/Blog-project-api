@@ -44,6 +44,9 @@ export class User {
   @Column({
     nullable: true
   })
+  @Index({
+    unique: true
+  })
   refreshToken: string
 
   @CreateDateColumn()
