@@ -188,7 +188,8 @@ export class UsersService {
       const dto = new UpdateProfileDto({
         address: updateProfileDto.address,
         birthday: updateProfileDto.birthday,
-        name: updateProfileDto.name
+        name: updateProfileDto.name,
+        avatar: updateProfileDto.avatar
       })
 
       await this.usersService.update(id, {

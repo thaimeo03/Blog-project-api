@@ -75,8 +75,12 @@ export class MediasService {
     }
   }
 
-  async deleteImages(publicIds: string[]) {
+  async deleteImages(urls: string[]) {
     try {
+      const images = await Promise.all(urls.map((url) => this.imagesService.getImageByUrl(url)))
+
+      const publicIds = images.map((image) => image.public_id)
+
       await Promise.all(
         publicIds.map(async (publicId) => {
           await cloudinary.v2.uploader.destroy(publicId)

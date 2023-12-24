@@ -26,10 +26,10 @@ export class MediasController {
     return this.mediasService.uploadImages(files)
   }
 
-  @Delete('delete-images')
+  @Delete('images')
   @UseGuards(AuthGuard)
   @Roles(Role.ADMIN, Role.USER)
-  deleteImages(@Body() publicIds: string[]) {
-    return this.mediasService.deleteImages(publicIds)
+  deleteImages(@Body() urls: string[]) {
+    return this.mediasService.deleteImages(urls)
   }
 }
