@@ -156,6 +156,13 @@ export class PostsService {
         throw new NotFoundException('Post not found') // Handle missing post
       }
 
+      // Delete old thumbnail if new thumbnail is uploaded
+      if (updatePostDto.thumbnail && post.thumbnail) {
+        const oldThumbnail = post.thumbnail
+        const oldThumbnailInfo = await this.imagesService.getImageByUrl(oldThumbnail)
+        await this.mediasService.deleteImages([oldThumbnailInfo.public_id])
+      }
+
       const dto = new UpdatePostDto({
         title: updatePostDto.title,
         thumbnail: updatePostDto.thumbnail,
@@ -183,14 +190,14 @@ export class PostsService {
           id
         }
       })
+
       if (!post) {
         throw new NotFoundException('Post not found')
       }
 
       // Delete thumbnail image
       if (post.thumbnail) {
-        const thumbnailInfo = await this.imagesService.getImageByUrl(post.thumbnail)
-        await this.mediasService.deleteImages([thumbnailInfo.public_id])
+        await this.mediasService.deleteImages([post.thumbnail])
       }
 
       // Delete post
