@@ -34,12 +34,7 @@ export class PostsService {
   }
 
   async findAll(filterPostDto: FilterPostDto) {
-    const { limit, page, title, createdAt, view } = filterPostDto
-    const LIMIT_QUERY = 10
-    const PAGE_QUERY = 1
-
-    const limitQuery = limit ? limit : LIMIT_QUERY
-    const pageQuery = page ? page : PAGE_QUERY
+    const { title, createdAt, limitQuery, pageQuery } = this.postPagination(filterPostDto)
 
     // Define where query
     const whereQuery: FindOptionsWhere<Post> | FindOptionsWhere<Post>[] = {
@@ -75,6 +70,52 @@ export class PostsService {
 
     return new ResponseDataWithPagination({
       message: 'Get posts successfully',
+      data: posts,
+      pagination: {
+        limit: Number(limitQuery),
+        current_page: Number(pageQuery),
+        total_page: total
+      }
+    })
+  }
+
+  async findAllByAuthor({ userId, filterPostDto }: { userId: string; filterPostDto: FilterPostDto }) {
+    const { title, createdAt, limitQuery, pageQuery } = this.postPagination(filterPostDto)
+
+    const whereQuery: FindOptionsWhere<Post> | FindOptionsWhere<Post>[] = {
+      user: { id: userId },
+      title: title ? Like(`%${title}%`) : undefined
+    }
+
+    // Get posts by filters
+    const [posts, totalPosts] = await Promise.all([
+      this.postsService.find({
+        where: whereQuery,
+        order: {
+          createdAt: createdAt ? (createdAt === 'asc' ? 'ASC' : 'DESC') : 'DESC'
+          // view: view ? (view === 'asc' ? 'ASC' : 'DESC') : undefined
+        },
+        relations: ['user'],
+        select: {
+          user: {
+            id: true,
+            name: true,
+            avatar: true
+          }
+        },
+        take: limitQuery,
+        skip: (pageQuery - 1) * limitQuery
+      }),
+      this.postsService.count({
+        where: whereQuery
+      })
+    ])
+
+    // Total page
+    const total = Math.ceil(totalPosts / limitQuery)
+
+    return new ResponseDataWithPagination({
+      message: 'Get my posts successfully',
       data: posts,
       pagination: {
         limit: Number(limitQuery),
@@ -159,6 +200,22 @@ export class PostsService {
       })
     } catch (error) {
       throw error
+    }
+  }
+
+  postPagination(filterPostDto: FilterPostDto) {
+    const { limit, page, title, createdAt, view } = filterPostDto
+    const LIMIT_QUERY = 10
+    const PAGE_QUERY = 1
+
+    const limitQuery = limit ? limit : LIMIT_QUERY
+    const pageQuery = page ? page : PAGE_QUERY
+
+    return {
+      title,
+      createdAt,
+      limitQuery,
+      pageQuery
     }
   }
 }

@@ -28,6 +28,16 @@ export class PostsController {
     return this.postsService.findAll(filterPostDto)
   }
 
+  // Still use filterPostDto
+  @Get('author')
+  @UseGuards(AuthGuard)
+  @Roles(Role.ADMIN, Role.USER)
+  findAllByAuthor(@Req() req: Request, @Query() filterPostDto: FilterPostDto) {
+    const userId = req['user'].userId
+
+    return this.postsService.findAllByAuthor({ userId, filterPostDto })
+  }
+
   @Get(':id')
   @UseGuards(AuthGuard)
   @Roles(Role.ADMIN, Role.USER)
