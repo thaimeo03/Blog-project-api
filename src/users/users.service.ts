@@ -10,11 +10,14 @@ import { ConfigService } from '@nestjs/config'
 import { Role } from 'common/enums/users.enum'
 import { LoginUserDto } from './dto/loginUser.dto'
 import { UpdateProfileDto } from './dto/updateProfile.dto'
+import { HttpService } from '@nestjs/axios'
+import { GoogleDataUserDto } from './dto/google.dto'
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private readonly usersService: Repository<User>,
+    private readonly httpService: HttpService,
     private jwtService: JwtService,
     private configService: ConfigService
   ) {}
@@ -80,6 +83,62 @@ export class UsersService {
           refresh_token
         }
       })
+    } catch (error) {
+      throw error
+    }
+  }
+
+  async loginWithGoogle(code: string) {
+    try {
+      const { access_token: google_access_token, id_token } = await this.getGoogleToken(code)
+      const { data } = await this.httpService.axiosRef.get<GoogleDataUserDto>(
+        'https://www.googleapis.com/oauth2/v1/userinfo',
+        {
+          params: {
+            access_token: google_access_token,
+            alt: 'json'
+          },
+          headers: {
+            Authorization: `Bearer ${id_token}`
+          }
+        }
+      )
+
+      const { name, email, picture } = data
+      // Check if user exists
+      let userId: string | null = null
+      let role: Role = Role.USER
+      const user = await this.getUserByEmail(email)
+      if (user) {
+        userId = user.id
+        role = user.role
+      } else {
+        // Create user
+        const passwordHashed = await this.hashPassword(email)
+        const newUser = await this.usersService.save({
+          name,
+          email,
+          password: passwordHashed,
+          avatar: picture
+        })
+        userId = newUser.id
+        role = newUser.role
+      }
+
+      // Create token
+      const { access_token, refresh_token } = await this.createToken({
+        userId: userId,
+        role: role
+      })
+      // Update user
+      await this.usersService.update(userId, {
+        refreshToken: refresh_token
+      })
+
+      return {
+        access_token,
+        refresh_token
+      }
     } catch (error) {
       throw error
     }
@@ -252,5 +311,22 @@ export class UsersService {
       access_token,
       refresh_token
     }
+  }
+
+  async getGoogleToken(code: string) {
+    const url = 'https://oauth2.googleapis.com/token'
+    const body = {
+      code,
+      client_id: this.configService.get('GOOGLE_CLIENT_ID'),
+      client_secret: this.configService.get('GOOGLE_CLIENT_SECRET'),
+      redirect_uri: this.configService.get('GOOGLE_REDIRECT_URI'),
+      grant_type: 'authorization_code'
+    }
+    const res = await this.httpService.axiosRef.post(url, body, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    })
+    return res.data
   }
 }
