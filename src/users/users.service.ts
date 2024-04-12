@@ -207,6 +207,7 @@ export class UsersService {
         name: true,
         email: true,
         avatar: true,
+        role: true,
         address: true,
         birthday: true,
         createdAt: true,
